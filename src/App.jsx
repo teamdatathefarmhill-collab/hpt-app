@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 
-const SCRIPT_URL = "https://script.google.com/macros/s/YOUR_SCRIPT_URL_HERE/exec";
-const HST_MIN = 30;
-const HST_MAX = 55;
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxOualqyMiSlynwZ_v1jhJu0OJJuTwgsIPk7IqN6Xji3I2BIJL9jlbeneKjsuARi_ekkw/exec";
 
 async function gasFetch(url, timeoutMs = 10000) {
   const controller = new AbortController();
@@ -141,22 +139,27 @@ export default function App() {
     try {
       const data = await gasFetch(`${SCRIPT_URL}?action=getGH`);
       if (data && typeof data === "object" && !data.error) {
-        setGhData(data);
+        // GAS returns { produksi: {...}, semai: {...} }
+        setGhData({
+          produksi: data.produksi || {},
+          semai: data.semai || {},
+        });
         setIsDemoMode(false);
       } else throw new Error("invalid");
     } catch {
-      setGhData(MOCK_GH_DATA);
+      // Fallback ke mock data
+      setGhData({
+        produksi: MOCK_GH_DATA,
+        semai: MOCK_SEMAI_DATA,
+      });
       setIsDemoMode(true);
     } finally {
       setLoadingGH(false);
     }
   };
 
-  const ghAktif = Object.entries(ghData).filter(([, info]) => {
-    if (!info.tanam) return true;
-    const hst = hitungHST(info.tanam);
-    return hst >= HST_MIN && hst <= HST_MAX;
-  });
+  const ghAktif = Object.entries(ghData.produksi || {});
+  const semaiAktif = Object.entries(ghData.semai || {});
 
   const handleSelectGH = (gh) => {
     if (submittedToday.includes(gh)) {
@@ -174,9 +177,11 @@ export default function App() {
     setPendingGH("");
   };
 
-  const ghInfo = ghData[selectedGH];
-  const hst    = ghInfo?.tanam ? hitungHST(ghInfo.tanam) : null;
-  const hstC   = hst !== null ? hstColor(hst) : null;
+  const ghInfo = activeTab === "semai"
+    ? (ghData.semai || {})[selectedGH]
+    : (ghData.produksi || {})[selectedGH];
+  const hst  = ghInfo?.tanam ? hitungHST(ghInfo.tanam) : null;
+  const hstC = hst !== null ? hstColor(hst) : null;
 
   const canProceedStep2 = operator.trim().length >= 2;
 
@@ -395,10 +400,12 @@ export default function App() {
               {/* Semai list */}
               {activeTab === "semai" && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {Object.entries(MOCK_SEMAI_DATA).map(([nama, info]) => {
+                  {semaiAktif.length === 0 ? (
+                    <div style={{ textAlign: "center", padding: 40, color: "rgba(255,255,255,0.3)", fontSize: 13 }}>Tidak ada data semai.</div>
+                  ) : semaiAktif.map(([nama, info]) => {
                     const done = submittedToday.includes(nama);
                     const selected = selectedGH === nama;
-                    const umur = info.tanam ? hitungHST(info.tanam) : null;
+                    const hss = info.tanam ? hitungHST(info.tanam) : null;
                     return (
                       <button key={nama} onClick={() => handleSelectGH(nama)} style={{
                         padding: "12px 14px",
@@ -411,13 +418,13 @@ export default function App() {
                         <div style={{ textAlign: "left" }}>
                           <div style={{ fontSize: 14, fontWeight: 700, color: selected ? "#81c784" : "#fff" }}>{nama}</div>
                           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>
-                            {info.lokasi} · {info.keterangan}
+                            Periode {info.periode}{info.hssRef ? ` · Ref: ${info.hssRef} HSS` : ""}
                           </div>
                         </div>
                         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                           {done && <span style={{ fontSize: 10, color: "#81c784", background: "rgba(76,175,80,0.1)", border: "1px solid rgba(76,175,80,0.3)", borderRadius: 20, padding: "2px 7px" }}>✓ Done</span>}
-                          {umur !== null && (
-                            <span style={{ fontSize: 11, fontWeight: 700, color: "#81c784", background: "rgba(76,175,80,0.1)", border: "1px solid rgba(76,175,80,0.25)", borderRadius: 20, padding: "3px 9px" }}>{umur} HSS</span>
+                          {hss !== null && (
+                            <span style={{ fontSize: 11, fontWeight: 700, color: "#81c784", background: "rgba(76,175,80,0.1)", border: "1px solid rgba(76,175,80,0.25)", borderRadius: 20, padding: "3px 9px" }}>{hss} HSS</span>
                           )}
                         </div>
                       </button>
