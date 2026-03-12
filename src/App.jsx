@@ -365,7 +365,7 @@ export default function App() {
                 ) : ghAktif.length === 0 ? (
                   <div style={{ textAlign: "center", padding: 40, color: "rgba(255,255,255,0.3)", fontSize: 13 }}>Tidak ada GH aktif saat ini.</div>
                 ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                     {ghAktif.map(([gh, info]) => {
                       const h = info.tanam ? hitungHST(info.tanam) : null;
                       const hc = h !== null ? hstColor(h) : null;
@@ -373,21 +373,21 @@ export default function App() {
                       const selected = selectedGH === gh;
                       return (
                         <button key={gh} onClick={() => handleSelectGH(gh)} style={{
-                          padding: "12px 14px",
+                          padding: "10px 12px",
                           background: selected ? "rgba(76,175,80,0.12)" : done ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.04)",
                           border: `1px solid ${selected ? "rgba(76,175,80,0.45)" : done ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.1)"}`,
-                          borderRadius: 12, cursor: "pointer",
-                          display: "flex", justifyContent: "space-between", alignItems: "center",
+                          borderRadius: 12, cursor: "pointer", textAlign: "left",
                           transition: "all 0.2s", opacity: done ? 0.6 : 1,
                         }}>
-                          <div style={{ textAlign: "left" }}>
-                            <div style={{ fontSize: 14, fontWeight: 700, color: selected ? "#81c784" : "#fff" }}>{gh}</div>
-                            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Periode {info.periode} · {info.tanam}</div>
-                          </div>
-                          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                            {done && <span style={{ fontSize: 10, color: "#81c784", background: "rgba(76,175,80,0.1)", border: "1px solid rgba(76,175,80,0.3)", borderRadius: 20, padding: "2px 7px" }}>✓ Done</span>}
+                          <div style={{ fontSize: 13, fontWeight: 700, color: selected ? "#81c784" : "#fff", marginBottom: 4 }}>{gh}</div>
+                          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginBottom: 6 }}>Periode {info.periode}</div>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            {done
+                              ? <span style={{ fontSize: 10, color: "#81c784", background: "rgba(76,175,80,0.1)", border: "1px solid rgba(76,175,80,0.3)", borderRadius: 20, padding: "2px 7px" }}>✓ Done</span>
+                              : <span />
+                            }
                             {h !== null && hc && (
-                              <span style={{ fontSize: 11, fontWeight: 700, color: hc.text, background: hc.bg, border: `1px solid ${hc.border}`, borderRadius: 20, padding: "3px 9px" }}>{h} HST</span>
+                              <span style={{ fontSize: 11, fontWeight: 700, color: hc.text, background: hc.bg, border: `1px solid ${hc.border}`, borderRadius: 20, padding: "2px 8px" }}>{h} HST</span>
                             )}
                           </div>
                         </button>
